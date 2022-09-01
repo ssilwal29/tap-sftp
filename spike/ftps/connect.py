@@ -14,10 +14,10 @@ ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
 ctx.options |= ssl.OP_NO_SSLv3
 ctx.verify_mode = ssl.CERT_NONE
 
-HOST = '172.17.0.2'
+HOST = "172.17.0.2"
 PORT = 21
-USER = 'ftptest'
-PASS = 'ftptest'
+USER = "ftptest"
+PASS = "ftptest"
 
 
 def connect():

@@ -8,11 +8,11 @@ def infer(iterable, file_name):
     if not file_name:
         raise Exception("Need file name")
 
-    if file_name.endswith('.tar.gz'):
+    if file_name.endswith(".tar.gz"):
         raise NotImplementedError("tar.gz not supported")
-    elif file_name.endswith('.gz'):
+    elif file_name.endswith(".gz"):
         yield gzip.GzipFile(fileobj=iterable)
-    elif file_name.endswith('.zip'):
+    elif file_name.endswith(".zip"):
         with zipfile.ZipFile(iterable) as zip:
             for name in zip.namelist():
                 yield zip.open(name)

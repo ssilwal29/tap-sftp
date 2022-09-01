@@ -15,19 +15,25 @@ class MockGPG:
         self.decrypt_cnt += 1
 
 
-@patch('tap_sftp.decrypt.gnupg.GPG')
+@patch("tap_sftp.decrypt.gnupg.GPG")
 def test_decrypt(patch_gpg):
     """
-        Using the custom mock we assert that keys were imported, file was decrypted, and
-        gpg was removed from file name
+    Using the custom mock we assert that keys were imported, file was decrypted, and
+    gpg was removed from file name
     """
     gpg = MockGPG()
     patch_gpg.return_value = gpg
-    output_path = '/tmp/path'
-    key = ''
-    gnupghome = ''
-    passphrase = ''
-    decrypted_path = gpg_decrypt(get_sample_file_path('fake_file.zip.gpg'), output_path, key, gnupghome, passphrase)
-    assert decrypted_path == '/tmp/path/fake_file.zip'
+    output_path = "/tmp/path"
+    key = ""
+    gnupghome = ""
+    passphrase = ""
+    decrypted_path = gpg_decrypt(
+        get_sample_file_path("fake_file.zip.gpg"),
+        output_path,
+        key,
+        gnupghome,
+        passphrase,
+    )
+    assert decrypted_path == "/tmp/path/fake_file.zip"
     assert gpg.import_cnt == 1
     assert gpg.decrypt_cnt == 1

@@ -7,10 +7,10 @@
 from ftplib import FTP
 
 
-HOST = '172.17.0.2'
+HOST = "172.17.0.2"
 PORT = 21
-USER = 'ftptest'
-PASS = 'ftptest'
+USER = "ftptest"
+PASS = "ftptest"
 
 
 def connect():

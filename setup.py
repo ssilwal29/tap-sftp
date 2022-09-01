@@ -2,7 +2,7 @@
 from setuptools import setup
 
 
-with open('requirements.txt', 'r') as fh:
+with open("requirements.txt", "r") as fh:
     requirements = fh.read().splitlines()
 
 setup(
@@ -18,5 +18,5 @@ setup(
     [console_scripts]
     tap-sftp=tap_sftp.tap:main
     """,
-    packages=["tap_sftp", "tap_sftp.singer_encodings"]
+    packages=["tap_sftp", "tap_sftp.singer_encodings"],
 )

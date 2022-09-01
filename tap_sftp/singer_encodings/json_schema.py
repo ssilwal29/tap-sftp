@@ -7,7 +7,7 @@ SDC_SOURCE_LINENO_COLUMN = "_sdc_source_lineno"
 
 
 def get_schema_for_table(conn, table_spec, config):
-    files = conn.get_files(table_spec['search_prefix'], table_spec['search_pattern'])
+    files = conn.get_files(table_spec["search_prefix"], table_spec["search_pattern"])
 
     if not files:
         return {}
@@ -16,34 +16,40 @@ def get_schema_for_table(conn, table_spec, config):
 
     data_schema = {
         **generate_schema(samples, table_spec),
-        SDC_SOURCE_FILE_COLUMN: {'type': 'string'},
-        SDC_SOURCE_LINENO_COLUMN: {'type': 'integer'},
-        csv_handler.SDC_EXTRA_COLUMN: {'type': 'array', 'items': {'type': 'string'}},
+        SDC_SOURCE_FILE_COLUMN: {"type": "string"},
+        SDC_SOURCE_LINENO_COLUMN: {"type": "integer"},
+        csv_handler.SDC_EXTRA_COLUMN: {"type": "array", "items": {"type": "string"}},
     }
 
     return {
-        'type': 'object',
-        'properties': data_schema,
+        "type": "object",
+        "properties": data_schema,
     }
 
 
 def sample_file(conn, table_spec, f, sample_rate, max_records, config):
     samples = []
-    decryption_configs = config.get('decryption_configs')
+    decryption_configs = config.get("decryption_configs")
     if decryption_configs:
-        decryption_configs['key'] = AWS_SSM.get_decryption_key(decryption_configs.get('SSM_key_name'))
+        decryption_configs["key"] = AWS_SSM.get_decryption_key(
+            decryption_configs.get("SSM_key_name")
+        )
         file_handle, decrypted_name = conn.get_file_handle(f, decryption_configs)
-        f['filepath'] = decrypted_name
+        f["filepath"] = decrypted_name
     else:
         file_handle = conn.get_file_handle(f)
 
     # Add file_name to opts and flag infer_compression to support gzipped files
-    opts = {'key_properties': table_spec['key_properties'],
-            'delimiter': table_spec['delimiter'],
-            'file_name': f['filepath'],
-            'encoding': table_spec.get('encoding', 'utf-8')}
+    opts = {
+        "key_properties": table_spec["key_properties"],
+        "delimiter": table_spec["delimiter"],
+        "file_name": f["filepath"],
+        "encoding": table_spec.get("encoding", "utf-8"),
+    }
 
-    readers = csv_handler.get_row_iterators(file_handle, options=opts, infer_compression=True)
+    readers = csv_handler.get_row_iterators(
+        file_handle, options=opts, infer_compression=True
+    )
 
     for reader in readers:
         current_row = 0
@@ -68,18 +74,20 @@ def sample_file(conn, table_spec, f, sample_rate, max_records, config):
     return (empty_file, samples)
 
 
-def sample_files(conn, table_spec, files, config,
-                 sample_rate=1, max_records=1000, max_files=1):
+def sample_files(
+    conn, table_spec, files, config, sample_rate=1, max_records=1000, max_files=1
+):
     to_return = []
     empty_samples = []
 
     files_so_far = 0
 
-    sorted_files = sorted(files, key=lambda f: f['last_modified'], reverse=True)
+    sorted_files = sorted(files, key=lambda f: f["last_modified"], reverse=True)
 
     for f in sorted_files:
-        empty_file, samples = sample_file(conn, table_spec, f,
-                                          sample_rate, max_records, config)
+        empty_file, samples = sample_file(
+            conn, table_spec, f, sample_rate, max_records, config
+        )
 
         if empty_file:
             empty_samples += samples
@@ -101,36 +109,36 @@ def infer(datum):
     """
     Returns the inferred data type
     """
-    if datum is None or datum == '':
+    if datum is None or datum == "":
         return None
 
     try:
         int(datum)
-        return 'integer'
+        return "integer"
     except (ValueError, TypeError):
         pass
 
     try:
         # numbers are NOT floats, they are DECIMALS
         float(datum)
-        return 'number'
+        return "number"
     except (ValueError, TypeError):
         pass
 
-    return 'string'
+    return "string"
 
 
 def count_sample(sample, type_summary, table_spec):
     """
-        Generates a summary dict of each column and its inferred types
+    Generates a summary dict of each column and its inferred types
 
-        {'Column1': {'string': 10}, 'Column2': {'integer': 10}}
+    {'Column1': {'string': 10}, 'Column2': {'integer': 10}}
     """
     for key, value in sample.items():
         if key not in type_summary:
             type_summary[key] = {}
 
-        date_overrides = table_spec.get('date_overrides', [])
+        date_overrides = table_spec.get("date_overrides", [])
         if key in date_overrides:
             datatype = "date-time"
         else:
@@ -152,21 +160,23 @@ def pick_datatype(type_count):
 
     Otherwise return `string`.
     """
-    to_return = 'string'
+    to_return = "string"
 
-    if type_count.get('date-time', 0) > 0:
-        return 'date-time'
+    if type_count.get("date-time", 0) > 0:
+        return "date-time"
 
     if len(type_count) == 1:
-        if type_count.get('integer', 0) > 0:
-            to_return = 'integer'
-        elif type_count.get('number', 0) > 0:
-            to_return = 'number'
+        if type_count.get("integer", 0) > 0:
+            to_return = "integer"
+        elif type_count.get("number", 0) > 0:
+            to_return = "number"
 
-    elif(len(type_count) == 2 and
-         type_count.get('integer', 0) > 0 and
-         type_count.get('number', 0) > 0):
-        to_return = 'number'
+    elif (
+        len(type_count) == 2
+        and type_count.get("integer", 0) > 0
+        and type_count.get("number", 0) > 0
+    ):
+        to_return = "number"
 
     return to_return
 
@@ -180,19 +190,19 @@ def generate_schema(samples, table_spec):
     for key, value in type_summary.items():
         datatype = pick_datatype(value)
 
-        if datatype == 'date-time':
+        if datatype == "date-time":
             schema[key] = {
-                'anyOf': [
-                    {'type': ['null', 'string'], 'format': 'date-time'},
-                    {'type': ['null', 'string']}
+                "anyOf": [
+                    {"type": ["null", "string"], "format": "date-time"},
+                    {"type": ["null", "string"]},
                 ]
             }
         else:
-            types = ['null', datatype]
-            if datatype != 'string':
-                types.append('string')
+            types = ["null", datatype]
+            if datatype != "string":
+                types.append("string")
             schema[key] = {
-                'type': types,
+                "type": types,
             }
 
     return schema
