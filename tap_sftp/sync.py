@@ -88,7 +88,7 @@ def sync_file(sftp_file_spec, stream, table_spec, config):
     )
 
     records_synced = 0
-
+    offset = 1 if table_spec.get("field_name") is not None else 2
     for reader in readers:
         LOGGER.info("Synced Record Count: 0")
         with Transformer() as transformer:
@@ -96,7 +96,7 @@ def sync_file(sftp_file_spec, stream, table_spec, config):
                 custom_columns = {
                     "_sdc_source_file": sftp_file_spec["filepath"],
                     # index zero, +1 for header row
-                    "_sdc_source_lineno": records_synced + 2,
+                    "_sdc_source_lineno": records_synced + offset,
                 }
                 rec = {**row, **custom_columns}
 
@@ -106,7 +106,7 @@ def sync_file(sftp_file_spec, stream, table_spec, config):
 
                 singer.write_record(stream.tap_stream_id, to_write)
                 records_synced += 1
-                if records_synced % 100000 == 0:
+                if records_synced % 10000 == 0:
                     LOGGER.info(f"Synced Record Count: {records_synced}")
         LOGGER.info(f"Sync Complete - Records Synced: {records_synced}")
 
