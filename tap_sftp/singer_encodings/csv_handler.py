@@ -1,12 +1,15 @@
 import csv
+import ctypes as ct
 import io
 
 import singer
+
 from tap_sftp.singer_encodings import compression
 
 SDC_EXTRA_COLUMN = "_sdc_extra"
 
 LOGGER = singer.get_logger()
+csv.field_size_limit(int(ct.c_ulong(-1).value // 2))
 
 
 def get_row_iterators(iterable, options={}, infer_compression=False):
