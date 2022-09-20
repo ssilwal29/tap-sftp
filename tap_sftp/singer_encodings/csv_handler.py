@@ -1,5 +1,6 @@
 import csv
-import ctypes as ct
+
+# import ctypes as ct
 import io
 
 import singer
@@ -9,7 +10,7 @@ from tap_sftp.singer_encodings import compression
 SDC_EXTRA_COLUMN = "_sdc_extra"
 
 LOGGER = singer.get_logger()
-csv.field_size_limit(int(ct.c_ulong(-1).value // 2))
+# csv.field_size_limit(int(ct.c_ulong(-1).value // 2))
 
 
 def get_row_iterators(iterable, options={}, infer_compression=False):
@@ -33,6 +34,7 @@ def get_row_iterator(iterable, options=None):
         fieldnames=options.get("field_names"),
         restkey=SDC_EXTRA_COLUMN,
         delimiter=options.get("delimiter", ","),
+        quoting=csv.QUOTE_NONE,
     )
 
     headers = set(reader.fieldnames)
